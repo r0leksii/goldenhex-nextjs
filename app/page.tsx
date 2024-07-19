@@ -66,10 +66,10 @@ type ProductLocationAreaPrice = {
 };
 
 type ProductImage = {
-  productId: number;
-  productImageId: number;
-  imageUrl: string;
-  mainImage: boolean;
+  ProductId: number;
+  ProductImageId: number;
+  ImageUrl: string;
+  MainImage: boolean;
 };
 
 type CustomerProductPricingDetail = {
@@ -133,7 +133,7 @@ type Product = {
   productUdfs: ProductUdf[];
   additionalSuppliersIds: number[];
   productLocationAreaPrices: ProductLocationAreaPrice[];
-  productImages: ProductImage[];
+  ProductImages: ProductImage[];
   isMultipleChoiceProductOptional: boolean;
   customerProductPricingDetails: CustomerProductPricingDetail[];
   containerFeeId: number;
@@ -177,14 +177,18 @@ export default async function Home() {
 
   return (
     <main className="flex flex-col gap-3 p-4">
-      <div className="grid grid-cols-6 gap-3">
+      <div className="flex flex-row flex-wrap gap-3 p-4">
         {categories.map((category) => (
           <div key={category.Id}>{category.Name}</div>
         ))}
       </div>
-      <div className="grid grid-cols-6 gap-3">
+      <div className="flex flex-row flex-wrap gap-3">
         {filteredProducts.map((product) => (
-          <Card className={"p-4"} key={product.Id}>
+          <Card className={"w-48 p-4"} key={product.Id}>
+            {product.ProductImages.map((img) => (
+              <img key={img.ProductImageId} alt={""} src={img.ImageUrl} />
+            ))}
+
             <h2>{product.Name}</h2>
             <p>{product.Description}</p>
             <p>Sale Price: ${product.SalePrice}</p>
