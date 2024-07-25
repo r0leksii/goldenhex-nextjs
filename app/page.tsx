@@ -1,209 +1,85 @@
-import "dotenv/config";
-import { Card } from "@/components/ui/card";
-require("dotenv").config();
+// "use client"
+import "dotenv/config"
+import { Card } from "@/components/ui/card"
+require("dotenv").config()
+import type { GetProductQueryParameters } from "@/services/types/catalogue/catalogue.types"
+import type { GetProductResponse } from "@/services/types/catalogue/catalogue.types"
 
-// Define the TypeScript types
-type MeasurementDetails = {
-  salePriceMeasurementSchemeItemId: number;
-  salePriceMeasurementUnitVolume: number;
-  salePriceFactor: number;
-  salePriceUnit: string;
-  costPriceMeasurementSchemeItemId: number;
-  costPriceMeasurementUnitVolume: number;
-  costPriceFactor: number;
-  costPriceUnit: string;
-};
+const NEXT_EPOS_KEY = process.env.NEXT_EPOS_KEY
+const NEXT_EPOS_SECRET = process.env.NEXT_EPOS_SECRET
+const credentials = `${NEXT_EPOS_KEY}:${NEXT_EPOS_SECRET}`
+const base64Credentials = btoa(credentials)
 
-type Supplier = {
-  id: number;
-  name: string;
-  description: string;
-  addressLine1: string;
-  addressLine2: string;
-  town: string;
-  county: string;
-  postCode: string;
-  contactNumber: string;
-  contactNumber2: string;
-  emailAddress: string;
-  type: string;
-  referenceCode: string;
-};
-
-type TaxRate = {
-  taxGroupId: number;
-  taxRateId: number;
-  locationId: number;
-  priority: number;
-  percentage: number;
-  name: string;
-  description: string;
-  taxCode: string;
-};
-
-type TaxGroup = {
-  id: number;
-  name: string;
-  taxRates: TaxRate[];
-};
-
-type ProductTag = {
-  id: number;
-  name: string;
-};
-
-type ProductUdf = {
-  id: number;
-  name: string;
-  value: string;
-};
-
-type ProductLocationAreaPrice = {
-  locationAreaId: number;
-  salePrice: number;
-  costPriceExcTax: number;
-  eatOutPrice: number;
-};
-
-type ProductImage = {
-  ProductId: number;
-  ProductImageId: number;
-  ImageUrl: string;
-  MainImage: boolean;
-};
-
-type CustomerProductPricingDetail = {
-  priceId: number;
-  typeId: number;
-  typeName: string;
-  price: number;
-  eatOutPrice: number;
-  productId: number;
-};
-
-type ProductDetail = {
-  productId: number;
-  detailedDescription: string;
-};
-
-type Product = {
-  Id: number;
-  Name: string;
-  Description: string;
-  costPrice: number;
-  isCostPriceIncTax: boolean;
-  SalePrice: number;
-  isSalePriceIncTax: boolean;
-  eatOutPrice: number;
-  isEatOutPriceIncTax: boolean;
-  categoryId: number;
-  Barcode: string;
-  salePriceTaxGroupId: number;
-  eatOutPriceTaxGroupId: number;
-  costPriceTaxGroupId: number;
-  brandId: number;
-  supplierId: number;
-  popupNoteId: number;
-  unitOfSale: number;
-  volumeOfSale: number;
-  variantGroupId: number;
-  multipleChoiceNoteId: number;
-  size: string;
-  sku: string;
-  sellOnWeb: boolean;
-  sellOnTill: boolean;
-  orderCode: string;
-  sortPosition: number;
-  rrPrice: number;
-  productType: number;
-  tareWeight: number;
-  articleCode: string;
-  isTaxExemptable: boolean;
-  referenceCode: string;
-  isVariablePrice: boolean;
-  excludeFromLoyaltyPointsGain: boolean;
-  IsArchived: boolean;
-  colourId: number;
-  measurementDetails: MeasurementDetails;
-  supplier: Supplier;
-  salePriceTaxGroup: TaxGroup;
-  eatOutPriceTaxGroup: TaxGroup;
-  costPriceTaxGroup: TaxGroup;
-  productTags: ProductTag[];
-  productUdfs: ProductUdf[];
-  additionalSuppliersIds: number[];
-  productLocationAreaPrices: ProductLocationAreaPrice[];
-  ProductImages: ProductImage[];
-  isMultipleChoiceProductOptional: boolean;
-  customerProductPricingDetails: CustomerProductPricingDetail[];
-  containerFeeId: number;
-  buttonColourId: number;
-  productDetails: ProductDetail;
-};
-
-const NEXT_EPOS_KEY = process.env.NEXT_EPOS_KEY;
-const NEXT_EPOS_SECRET = process.env.NEXT_EPOS_SECRET;
-const credentials = `${NEXT_EPOS_KEY}:${NEXT_EPOS_SECRET}`;
-const base64Credentials = btoa(credentials);
-
-async function getCategories(): Promise<Product[]> {
-  const res = await fetch("https://api.eposnowhq.com/api/v4/category/", {
-    cache: "force-cache",
-    headers: {
-      Authorization: `Basic ${base64Credentials}`,
-    },
-  });
-
-  return await res.json();
+const queryParams: GetProductQueryParameters = {
+  Page: 1,
+  Limit: 50,
+  Search: "wine",
+  // Add other default query params here if needed
 }
 
-async function getProducts(): Promise<Product[]> {
-  const res = await fetch("https://api.eposnowhq.com/api/v4/product", {
+if (queryParams.Search !== undefined) {
+  queryParams.Page = undefined
+  queryParams.Limit = undefined
+}
+
+async function getCatalogueProducts(
+  queryParams: GetProductQueryParameters,
+): Promise<GetProductResponse> {
+  const url = new URL(`${process.env.NEXT_EPOS_URL}/catalogue/products`)
+
+  // Dynamically add query parameters to the URL using for...of loop
+  if (queryParams) {
+    for (const key of Object.keys(queryParams) as Array<
+      keyof GetProductQueryParameters
+    >) {
+      const value = queryParams[key]
+      if (value !== null && value !== undefined) {
+        url.searchParams.append(key, String(value))
+      }
+    }
+  }
+
+  const res = await fetch(url.toString(), {
     cache: "no-store",
     headers: {
       Authorization: `Basic ${base64Credentials}`,
     },
-  });
+  })
 
-  return await res.json();
+  return await res.json()
 }
 
 export default async function Home() {
-  const categories = await getCategories();
-  const products = await getProducts();
-
-  // const filteredProducts = products.filter(
-  //   (product) =>
-  //     !product.IsArchived &&
-  //     product.Barcode.split(",").some((barcode) =>
-  //       validBarcodes.includes(barcode.trim()),
-  //     ),
-  // );
-  // .slice(0, 1000);
-
-  // console.log("Products:", filteredProducts);
+  const catalogueProducts = await getCatalogueProducts(queryParams)
+  // await new Promise((resolve) => setTimeout(resolve, 2000))
 
   return (
     <main className="flex flex-col gap-3 p-4">
-      <div className="flex flex-row flex-wrap gap-3 p-4">
-        {categories.map((category) => (
-          <div key={category.Id}>{category.Name}</div>
-        ))}
-      </div>
+      <p>Total Pages: {catalogueProducts?.Metadata?.TotalPages}</p>
+      <p>Total Records: {catalogueProducts?.Metadata?.TotalRecords}</p>
+      <p>Current Page Size: {catalogueProducts?.Metadata?.CurrentPageSize}</p>
+
+      <p>Base URL: {catalogueProducts?.Links?.BaseURL}</p>
+      <p>First Page: {catalogueProducts?.Links?.FirstPage}</p>
+      <p>Last Page: {catalogueProducts?.Links?.LastPage}</p>
+      <p>Next Page: {catalogueProducts?.Links?.NextPage}</p>
+      <p>Previous Page: {catalogueProducts?.Links?.PreviousPage}</p>
+
       <div className="flex flex-row flex-wrap gap-3">
-        {products.map((product) => (
-          <Card className={"w-48 p-4"} key={product.Id}>
-            {product.ProductImages.map((img) => (
-              <img key={img.ProductImageId} alt={""} src={img.ImageUrl} />
-            ))}
+        {catalogueProducts?.Data?.map((product) => (
+          <Card className={"w-64 p-4"} key={product.Id}>
+            {/*{product.ProductImages.map((img) => (*/}
+            {/*  <img key={img.ProductImageId} alt={""} src={img.ImageUrl} />*/}
+            {/*))}*/}
             <h2>{product.Name}</h2>
-            <p>{product.Description}</p>
-            <p>Sale Price: ${product.SalePrice}</p>
+            {/*<p>{product.Description}</p>*/}
+            <p>SalePriceIncTax ${product.SalePriceIncTax}</p>
             <p>ID: {product.Id}</p>
-            {/*<p>Barcode: {product.Barcode.split(",").join(", ")}</p>*/}
+            <p>Barcode: {product?.Barcode?.split(",").join(", ")}</p>
+            {!product.SellOnWeb && <p>SellOnWeb: false</p>}
           </Card>
         ))}
       </div>
     </main>
-  );
+  )
 }
