@@ -97,7 +97,7 @@ type Product = {
   eatOutPrice: number;
   isEatOutPriceIncTax: boolean;
   categoryId: number;
-  barcode: string;
+  Barcode: string;
   salePriceTaxGroupId: number;
   eatOutPriceTaxGroupId: number;
   costPriceTaxGroupId: number;
@@ -158,8 +158,8 @@ async function getCategories(): Promise<Product[]> {
 }
 
 async function getProducts(): Promise<Product[]> {
-  const res = await fetch("https://api.eposnowhq.com/api/v4/product/", {
-    cache: "force-cache",
+  const res = await fetch("https://api.eposnowhq.com/api/v4/product", {
+    cache: "no-store",
     headers: {
       Authorization: `Basic ${base64Credentials}`,
     },
@@ -171,9 +171,17 @@ async function getProducts(): Promise<Product[]> {
 export default async function Home() {
   const categories = await getCategories();
   const products = await getProducts();
-  const filteredProducts = products
-    .filter((product) => !product.IsArchived)
-    .slice(0, 100);
+
+  // const filteredProducts = products.filter(
+  //   (product) =>
+  //     !product.IsArchived &&
+  //     product.Barcode.split(",").some((barcode) =>
+  //       validBarcodes.includes(barcode.trim()),
+  //     ),
+  // );
+  // .slice(0, 1000);
+
+  // console.log("Products:", filteredProducts);
 
   return (
     <main className="flex flex-col gap-3 p-4">
@@ -183,16 +191,16 @@ export default async function Home() {
         ))}
       </div>
       <div className="flex flex-row flex-wrap gap-3">
-        {filteredProducts.map((product) => (
+        {products.map((product) => (
           <Card className={"w-48 p-4"} key={product.Id}>
             {product.ProductImages.map((img) => (
               <img key={img.ProductImageId} alt={""} src={img.ImageUrl} />
             ))}
-
             <h2>{product.Name}</h2>
             <p>{product.Description}</p>
             <p>Sale Price: ${product.SalePrice}</p>
             <p>ID: {product.Id}</p>
+            {/*<p>Barcode: {product.Barcode.split(",").join(", ")}</p>*/}
           </Card>
         ))}
       </div>
