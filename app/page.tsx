@@ -1,33 +1,20 @@
-// "use client"
 import "dotenv/config"
+import Search from "@/components/search/search"
 import { Card } from "@/components/ui/card"
-require("dotenv").config()
 import type { GetProductQueryParameters } from "@/services/types/catalogue/catalogue.types"
 import type { GetProductResponse } from "@/services/types/catalogue/catalogue.types"
+import { revalidatePath } from "next/cache"
 
 const NEXT_EPOS_KEY = process.env.NEXT_EPOS_KEY
 const NEXT_EPOS_SECRET = process.env.NEXT_EPOS_SECRET
 const credentials = `${NEXT_EPOS_KEY}:${NEXT_EPOS_SECRET}`
 const base64Credentials = btoa(credentials)
 
-const queryParams: GetProductQueryParameters = {
-  Page: 1,
-  Limit: 50,
-  Search: "wine",
-  // Add other default query params here if needed
-}
-
-if (queryParams.Search !== undefined) {
-  queryParams.Page = undefined
-  queryParams.Limit = undefined
-}
-
-async function getCatalogueProducts(
+const getCatalogueProducts = async (
   queryParams: GetProductQueryParameters,
-): Promise<GetProductResponse> {
+): Promise<GetProductResponse> => {
   const url = new URL(`${process.env.NEXT_EPOS_URL}/catalogue/products`)
 
-  // Dynamically add query parameters to the URL using for...of loop
   if (queryParams) {
     for (const key of Object.keys(queryParams) as Array<
       keyof GetProductQueryParameters
@@ -49,12 +36,26 @@ async function getCatalogueProducts(
   return await res.json()
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: { searchParams: { search?: string } }) {
+  const queryParams: GetProductQueryParameters = {
+    Page: 1,
+    Limit: 200,
+    Search: searchParams.search || "",
+    // Add other default query params here if needed
+  }
+
+  if (queryParams.Search) {
+    queryParams.Page = undefined
+    queryParams.Limit = undefined
+  }
+
   const catalogueProducts = await getCatalogueProducts(queryParams)
-  // await new Promise((resolve) => setTimeout(resolve, 2000))
 
   return (
     <main className="flex flex-col gap-3 p-4">
+      <Search initialSearchParams={queryParams.Search || ""} />
       <p>Total Pages: {catalogueProducts?.Metadata?.TotalPages}</p>
       <p>Total Records: {catalogueProducts?.Metadata?.TotalRecords}</p>
       <p>Current Page Size: {catalogueProducts?.Metadata?.CurrentPageSize}</p>
@@ -68,11 +69,11 @@ export default async function Home() {
       <div className="flex flex-row flex-wrap gap-3">
         {catalogueProducts?.Data?.map((product) => (
           <Card className={"w-64 p-4"} key={product.Id}>
-            {/*{product.ProductImages.map((img) => (*/}
-            {/*  <img key={img.ProductImageId} alt={""} src={img.ImageUrl} />*/}
-            {/*))}*/}
+            {/* {product.ProductImages.map((img) => (
+              <img key={img.ProductImageId} alt={""} src={img.ImageUrl} />
+            ))} */}
             <h2>{product.Name}</h2>
-            {/*<p>{product.Description}</p>*/}
+            {/* <p>{product.Description}</p> */}
             <p>SalePriceIncTax ${product.SalePriceIncTax}</p>
             <p>ID: {product.Id}</p>
             <p>Barcode: {product?.Barcode?.split(",").join(", ")}</p>
