@@ -8,7 +8,7 @@ type SearchProps = {
   initialSearchParams: string
 }
 
-const Search: React.FC<SearchProps> = ({ initialSearchParams }) => {
+export const SearchBar = ({ initialSearchParams }: SearchProps) => {
   const [search, setSearch] = useState(initialSearchParams)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,16 +16,16 @@ const Search: React.FC<SearchProps> = ({ initialSearchParams }) => {
   }
 
   return (
-    <form action="/" method="get">
-      <Input
-        placeholder="Search"
-        name="search"
-        value={search}
-        onChange={handleChange}
-      />
-      <Button type="submit">Search</Button>
+    <form>
+      <div className={"flex flex-row items-center gap-2"}>
+        <Input
+          placeholder="Search"
+          name="search"
+          value={search}
+          onChange={handleChange}
+        />
+        <Button type="submit">Search</Button>
+      </div>
     </form>
   )
 }
-
-export default Search
