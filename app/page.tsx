@@ -48,8 +48,6 @@ export default async function Home({
   const page = searchParams.page ?? 1
   const search = searchParams.search || ""
 
-  console.log(limit)
-
   const queryParams: GetProductQueryParameters = {
     Limit: limit,
     Page: page,
@@ -84,6 +82,7 @@ export default async function Home({
         pageSize={limit}
         currentPage={page}
         totalPages={catalogueProducts?.Metadata?.TotalPages}
+        searchQuery={""}
       />
       <p>Total Pages: {catalogueProducts?.Metadata?.TotalPages}</p>
       <p>Total Records: {catalogueProducts?.Metadata?.TotalRecords}</p>
