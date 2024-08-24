@@ -61,23 +61,42 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnFiltersChange: setColumnFilters,
+    // getPaginationRowModel: getPaginationRowModel(),
+    // getFilteredRowModel: getFilteredRowModel(),
+    // onColumnFiltersChange: setColumnFilters,
     state: {
-      sorting,
-      columnFilters,
+      // sorting,
+      // columnFilters,
       pagination: {
         pageIndex: currentPage - 1,
         pageSize,
       },
     },
+    manualPagination: true,
   })
 
   const handlePageSizeLimitChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set("limit", value)
     router.push(`?${params.toString()}`)
+  }
+
+  const handlePreviousPage = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    const currentPageFromURL = Number.parseInt(params.get("page") || "1", 10)
+    if (currentPageFromURL > 1) {
+      params.set("page", (currentPageFromURL - 1).toString())
+      router.push(`?${params.toString()}`)
+    }
+  }
+
+  const handleNextPage = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    const currentPageFromURL = Number.parseInt(params.get("page") || "1", 10)
+    if (currentPageFromURL < (totalPages || Number.POSITIVE_INFINITY)) {
+      params.set("page", (currentPageFromURL + 1).toString())
+      router.push(`?${params.toString()}`)
+    }
   }
 
   return (
@@ -148,16 +167,16 @@ export function DataTable<TData, TValue>({
           Page {table.getState().pagination.pageIndex + 1} of {totalPages}
         </div>
         <Button
-          disabled={!table.getCanPreviousPage()}
-          onClick={() => table.previousPage()}
+          disabled={currentPage <= 1}
+          onClick={handlePreviousPage}
           variant={"outline"}
         >
           <ChevronLeftIcon className={"w-4 h-4"} />
           Go to previous page
         </Button>
         <Button
-          disabled={!table.getCanNextPage()}
-          onClick={() => table.nextPage()}
+          disabled={currentPage >= (totalPages || Number.POSITIVE_INFINITY)}
+          onClick={handleNextPage}
           variant={"outline"}
         >
           Go to the next page
